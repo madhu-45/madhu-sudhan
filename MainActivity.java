@@ -1,56 +1,77 @@
-package net.smallacademy.authenticatorapp;
+vpackage com.example.login2;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.ButtonBarLayout;
 
-import android.content.Intent;
+import android.content.DialogInterface;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.TextView;
 
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.firestore.DocumentReference;
-import com.google.firebase.firestore.DocumentSnapshot;
-import com.google.firebase.firestore.EventListener;
-import com.google.firebase.firestore.FirebaseFirestore;
-import com.google.firebase.firestore.FirebaseFirestoreException;
-
-import javax.annotation.Nullable;
+import com.facebook.CallbackManager;
+import com.facebook.FacebookCallback;
+import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
+import com.facebook.login.LoginResult;
 
 public class MainActivity extends AppCompatActivity {
-    TextView fullName,email,phone;
-    FirebaseAuth fAuth;
-    FirebaseFirestore fStore;
-    String userId;
+    Button b;
+    TextView t;
+    CallbackManager CallbackManager ;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //intitialize the facebook sdk by.
+        //this is must be before the set content view
+        FacebookSdk.sdkIntitialize(getApplicationContext());
         setContentView(R.layout.activity_main);
-        phone = findViewById(R.id.profilePhone);
-        fullName = findViewById(R.id.profileName);
-        email    = findViewById(R.id.profileEmail);
-
-        fAuth = FirebaseAuth.getInstance();
-        fStore = FirebaseFirestore.getInstance();
-
-        userId = fAuth.getCurrentUser().getUid();
-
-        DocumentReference documentReference = fStore.collection("users").document(userId);
-        documentReference.addSnapshotListener(this, new EventListener<DocumentSnapshot>() {
+        b=findViewById(R.id.button);
+        t=findViewById(R.id.textView);
+        //intitalize callbackmanager
+        CallbackManager=CallbackManager.Factory.create();
+        //set the callbackmanager callback to the button
+        b.registerCallback(CallbackManager,new FacebookCallback<LoginResult>()
+        {
             @Override
-            public void onEvent(@Nullable DocumentSnapshot documentSnapshot, @Nullable FirebaseFirestoreException e) {
-                phone.setText(documentSnapshot.getString("phone"));
-                fullName.setText(documentSnapshot.getString("fName"));
-                email.setText(documentSnapshot.getString("email"));
+            public void onSuccess(LoginResult loginResult)
+            {
+                //if the user is success this method is invokes
+                t.setText("Login Success\n"+
+                loginResult.getAccessToken().getUserId()+
+                        "\n"+loginResult.getAccessToken().getToken());
+                //loginResult.getAccessToken().getUserId() this will display users user id.
+                //loginResult.getAccessToken().getToken() here this is the login token.
+
+            }
+            @Override
+            public void onCancel()
+            {
+                //if the user cancel the request this method is invokes
+                t.setText("login cancel")
+
+            }
+            @Override
+            public void onError(FacebookException error)
+            {
+                //on the error this method is invokes
             }
         });
+        //when the user click the login button this method is onactivitymethod invoeks
+
+                @Override
+                protected void onActivityResult(int requestCode,int resultCode,intent data)
+                {
+                    //when the user enter the  credential after login,this method is invokes.
+                    //here we pass th results into the callbackmanager
+                    CallbackManager.onActivityResult(requestCode,resultCode,data);
+                }
 
 
-    }
 
-    public void logout(View view) {
-        FirebaseAuth.getInstance().signOut();//logout
-        startActivity(new Intent(getApplicationContext(),Login.class));
-        finish();
+
+
+
     }
 }
+
